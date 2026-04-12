@@ -24,22 +24,14 @@ const ALL_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 const HOUR_FORMAT_OPTIONS: Record<string, ((hour: number) => string) | undefined> = {
   default: undefined,
   "12h": (h) => {
-    const hour = Math.floor(h);
-    const min = Math.round((h - hour) * 60);
-    const suffix = hour < 12 ? "AM" : "PM";
-    const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return min > 0 ? `${display}:${String(min).padStart(2, "0")}${suffix}` : `${display}${suffix}`;
+    if (h === 0) return "12AM";
+    if (h < 12) return `${h}AM`;
+    if (h === 12) return "12PM";
+    return `${h - 12}PM`;
   },
-  padded: (h) => {
-    const hour = Math.floor(h);
-    const min = Math.round((h - hour) * 60);
-    return min > 0
-      ? `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`
-      : String(hour).padStart(2, "0");
-  },
+  padded: (h) => String(h).padStart(2, "0"),
 };
 
-// 점심시간 disabled 예시
 const LUNCH_DISABLED: Schedule = {
   mon: [12, 13], tue: [12, 13], wed: [12, 13],
   thu: [12, 13], fri: [12, 13],
@@ -56,21 +48,16 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [hourFormat, setHourFormat] = useState<string>("default");
   const [visibleDays, setVisibleDays] = useState<string[]>([...ALL_DAYS]);
+  const [useDisabledSlots, setUseDisabledSlots] = useState(false);
   const [minHour, setMinHour] = useState(0);
   const [maxHour, setMaxHour] = useState(23);
-  const [hourlyChunks, setHourlyChunks] = useState(1);
-  const [useDisabledSlots, setUseDisabledSlots] = useState(false);
-  const [maxSelections, setMaxSelections] = useState<number | "">("");
-  const [selectionMode, setSelectionMode] = useState<"rectangle" | "linear">("rectangle");
-  const [selectedColor, setSelectedColor] = useState("");
-  const [hoveredColor, setHoveredColor] = useState("");
 
   const selectedCount = Object.values(schedule).reduce(
     (sum, hours) => sum + (hours?.length ?? 0),
     0,
   );
 
-  const summary = summarizeSchedule(schedule, LABEL_OPTIONS[lang], visibleDays, hourlyChunks);
+  const summary = summarizeSchedule(schedule, LABEL_OPTIONS[lang], visibleDays);
 
   return (
     <div
@@ -83,8 +70,7 @@ function App() {
     >
       <h1 style={{ fontSize: 24, marginBottom: 8 }}>react-schedule-picker</h1>
       <p style={{ color: "#71717a", marginBottom: 24 }}>
-        Click or drag to select time slots. Selected: <strong>{selectedCount}</strong> slots
-        {maxSelections !== "" && <span> / {maxSelections} max</span>}
+        Click or drag to select time slots. Selected: <strong>{selectedCount}</strong> hours
       </p>
 
       {/* Options Panel */}
@@ -177,23 +163,6 @@ function App() {
         </label>
 
         <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          Chunks:
-          <select value={hourlyChunks} onChange={(e) => { setHourlyChunks(Number(e.target.value)); setSchedule({}); }} style={{ padding: "2px 8px" }}>
-            <option value={1}>1h</option>
-            <option value={2}>30min</option>
-            <option value={4}>15min</option>
-          </select>
-        </label>
-
-        <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          Mode:
-          <select value={selectionMode} onChange={(e) => setSelectionMode(e.target.value as "rectangle" | "linear")} style={{ padding: "2px 8px" }}>
-            <option value="rectangle">Rectangle</option>
-            <option value="linear">Linear</option>
-          </select>
-        </label>
-
-        <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
           Min:
           <input type="number" min={0} max={maxHour} value={minHour} onChange={(e) => setMinHour(Number(e.target.value))} style={{ width: 48, padding: "2px 4px" }} />
         </label>
@@ -201,30 +170,6 @@ function App() {
         <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
           Max:
           <input type="number" min={minHour} max={23} value={maxHour} onChange={(e) => setMaxHour(Number(e.target.value))} style={{ width: 48, padding: "2px 4px" }} />
-        </label>
-
-        <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          Max Sel:
-          <input
-            type="number"
-            min={0}
-            value={maxSelections}
-            onChange={(e) => setMaxSelections(e.target.value === "" ? "" : Number(e.target.value))}
-            placeholder="∞"
-            style={{ width: 52, padding: "2px 4px" }}
-          />
-        </label>
-
-        <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          Color:
-          <input type="color" value={selectedColor || "#bbcaff"} onChange={(e) => setSelectedColor(e.target.value)} style={{ width: 28, height: 22, padding: 0, border: "none" }} />
-          {selectedColor && <button onClick={() => setSelectedColor("")} style={{ fontSize: 11, cursor: "pointer" }}>reset</button>}
-        </label>
-
-        <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          Hover:
-          <input type="color" value={hoveredColor || "#f4f4f5"} onChange={(e) => setHoveredColor(e.target.value)} style={{ width: 28, height: 22, padding: 0, border: "none" }} />
-          {hoveredColor && <button onClick={() => setHoveredColor("")} style={{ fontSize: 11, cursor: "pointer" }}>reset</button>}
         </label>
 
         <button onClick={() => setSchedule({})} style={{ padding: "4px 12px", cursor: "pointer" }}>
@@ -245,12 +190,7 @@ function App() {
         dayLabels={LABEL_OPTIONS[lang]}
         minHour={minHour}
         maxHour={maxHour}
-        hourlyChunks={hourlyChunks}
         disabledSlots={useDisabledSlots ? LUNCH_DISABLED : undefined}
-        maxSelections={maxSelections !== "" ? maxSelections : undefined}
-        selectionMode={selectionMode}
-        selectedColor={selectedColor || undefined}
-        hoveredColor={hoveredColor || undefined}
         className={darkMode ? "rsp-dark" : undefined}
       />
 

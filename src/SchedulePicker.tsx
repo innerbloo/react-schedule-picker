@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState, useMemo } from "react";
 import type { SchedulePickerProps } from "./types";
 import {
   DAY_ORDER,
@@ -9,11 +9,9 @@ import {
   hasHour,
   toggleHourWithMax,
   applyRect,
-  applyLinear,
   formatHourHeader,
   generateSlots,
   isSlotDisabled,
-  countSelectedHours,
 } from "./utils";
 import type { Schedule, Preset } from "./types";
 import "./SchedulePicker.css";
@@ -28,18 +26,12 @@ export function SchedulePicker({
   disabled = false,
   minHour = 0,
   maxHour = 23,
-  hourlyChunks = 1,
   visibleDays = DAY_ORDER as unknown as string[],
   dayLabels = DEFAULT_DAY_LABELS,
   dayAxis = "x",
   showAllHours = true,
   formatHour,
   disabledSlots,
-  maxSelections,
-  selectionMode = "rectangle",
-  selectedColor,
-  hoveredColor,
-  renderCell,
   className,
 }: SchedulePickerProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -55,28 +47,15 @@ export function SchedulePicker({
   const tableRef = useRef<HTMLTableElement>(null);
 
   const slots = useMemo(
-    () => generateSlots(minHour, maxHour, hourlyChunks),
-    [minHour, maxHour, hourlyChunks],
+    () => generateSlots(minHour, maxHour, 1),
+    [minHour, maxHour],
   );
   const activePresets = presets ?? DEFAULT_PRESETS;
-
-  // --- 색상 오버라이드 스타일 ---
-  const colorStyle = useMemo(() => {
-    const style: Record<string, string> = {};
-    if (selectedColor) style["--rsp-color-selected"] = selectedColor;
-    if (hoveredColor) style["--rsp-color-bg-hover"] = hoveredColor;
-    return style;
-  }, [selectedColor, hoveredColor]);
 
   const getHourLabel = useCallback(
     (slot: number): string => {
       if (formatHour) return formatHour(slot);
-      if (showAllHours) {
-        if (Number.isInteger(slot)) return String(slot);
-        const h = Math.floor(slot);
-        const m = Math.round((slot - h) * 60);
-        return `${h}:${String(m).padStart(2, "0")}`;
-      }
+      if (showAllHours) return String(slot);
       return formatHourHeader(slot);
     },
     [formatHour, showAllHours],
@@ -94,9 +73,9 @@ export function SchedulePicker({
       baseRef.current = value;
       startRef.current = { dayIdx, slotIdx };
       setIsDragging(true);
-      onChange(toggleHourWithMax(value, day, slot, willSelect, maxSelections, disabledSlots));
+      onChange(toggleHourWithMax(value, day, slot, willSelect, undefined, disabledSlots));
     },
-    [value, onChange, visibleDays, slots, readOnly, maxSelections, disabledSlots],
+    [value, onChange, visibleDays, slots, readOnly, disabledSlots],
   );
 
   const handleCellPointerOver = useCallback(
@@ -106,13 +85,10 @@ export function SchedulePicker({
       const slotIdx = slots.indexOf(slot);
       const { dayIdx: sd, slotIdx: ss } = startRef.current;
 
-      const next =
-        selectionMode === "linear"
-          ? applyLinear(baseRef.current, visibleDays, sd, ss, dayIdx, slotIdx, dragSelectRef.current, slots, maxSelections, disabledSlots)
-          : applyRect(baseRef.current, visibleDays, sd, slots[ss], dayIdx, slot, dragSelectRef.current, slots, maxSelections, disabledSlots);
+      const next = applyRect(baseRef.current, visibleDays, sd, slots[ss], dayIdx, slot, dragSelectRef.current, slots, undefined, disabledSlots);
       onChange(next);
     },
-    [isDragging, onChange, visibleDays, slots, readOnly, selectionMode, maxSelections, disabledSlots],
+    [isDragging, onChange, visibleDays, slots, readOnly, disabledSlots],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -134,21 +110,14 @@ export function SchedulePicker({
         const day = visibleDays[i];
         if (selected) {
           const enabledSlots = slots.filter((s) => !isSlotDisabled(disabledSlots, day, s));
-          if (maxSelections !== undefined) {
-            const currentCount = countSelectedHours(next);
-            const remaining = maxSelections - currentCount;
-            const toAdd = enabledSlots.slice(0, remaining);
-            next = { ...next, [day]: [...new Set([...(next[day] ?? []), ...toAdd])].sort((a, b) => a - b) };
-          } else {
-            next = { ...next, [day]: enabledSlots };
-          }
+          next = { ...next, [day]: enabledSlots };
         } else {
           next = { ...next, [day]: [] };
         }
       }
       return next;
     },
-    [visibleDays, slots, disabledSlots, maxSelections],
+    [visibleDays, slots, disabledSlots],
   );
 
   const applyHourRange = useCallback(
@@ -159,12 +128,12 @@ export function SchedulePicker({
       for (let i = minIdx; i <= maxIdx; i++) {
         const slot = slots[i];
         for (const d of visibleDays) {
-          next = toggleHourWithMax(next, d, slot, selected, maxSelections, disabledSlots);
+          next = toggleHourWithMax(next, d, slot, selected, undefined, disabledSlots);
         }
       }
       return next;
     },
-    [visibleDays, slots, maxSelections, disabledSlots],
+    [visibleDays, slots, disabledSlots],
   );
 
   // --- 터치 드래그 ---
@@ -305,7 +274,6 @@ export function SchedulePicker({
   return (
     <div
       className={`rsp-container${disabled ? " rsp-container--disabled" : ""}${className ? ` ${className}` : ""}`}
-      style={colorStyle as React.CSSProperties}
       onMouseUp={handlePointerUp}
       onMouseLeave={handlePointerUp}
       onTouchEnd={handlePointerUp}
@@ -405,7 +373,7 @@ export function SchedulePicker({
                           handleCellPointerDown(day, slot);
                         }}
                       >
-                        {renderCell ? renderCell(day, slot, hasHour(value, day, slot)) : null}
+
                       </td>
                     ))}
                   </tr>
@@ -476,7 +444,7 @@ export function SchedulePicker({
                           handleCellPointerDown(day, slot);
                         }}
                       >
-                        {renderCell ? renderCell(day, slot, hasHour(value, day, slot)) : null}
+
                       </td>
                     ))}
                   </tr>
