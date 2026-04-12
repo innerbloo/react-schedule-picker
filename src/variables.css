@@ -1,0 +1,56 @@
+:root {
+  /* 색상 */
+  --rsp-color-primary: #2d6af6;
+  --rsp-color-primary-light: #ecf1ff;
+  --rsp-color-selected: #bbcaff;
+  --rsp-color-selected-readonly: #d4d4d8;
+  --rsp-color-border: #e4e4e7;
+  --rsp-color-bg: #ffffff;
+  --rsp-color-bg-header: #f4f4f5;
+  --rsp-color-bg-label: #fafafa;
+  --rsp-color-bg-hover: #f4f4f5;
+  --rsp-color-text: #2c2c31;
+  --rsp-color-text-sub: #71717a;
+  --rsp-color-text-header: #1c1c20;
+  --rsp-color-saturday: var(--rsp-color-primary);
+  --rsp-color-sunday: #f04646;
+
+  /* 크기 */
+  --rsp-cell-size: 36px;
+  --rsp-day-col-width: 48px;
+  --rsp-border-radius: 8px;
+
+  /* 폰트 */
+  --rsp-font-family: inherit;
+  --rsp-font-size-sm: 12px;
+  --rsp-font-size-md: 14px;
+
+  /* 프리셋 버튼 */
+  --rsp-preset-bg: var(--rsp-color-bg);
+  --rsp-preset-bg-hover: var(--rsp-color-bg-hover);
+  --rsp-preset-border: var(--rsp-color-border);
+  --rsp-preset-text: var(--rsp-color-text);
+  --rsp-preset-radius: 9999px;
+}
+
+/* 다크 모드 */
+.rsp-dark {
+  --rsp-color-primary: #6d9aff;
+  --rsp-color-primary-light: #1e2a4a;
+  --rsp-color-selected: #3b5998;
+  --rsp-color-selected-readonly: #4a4a4e;
+  --rsp-color-border: #3f3f46;
+  --rsp-color-bg: #18181b;
+  --rsp-color-bg-header: #27272a;
+  --rsp-color-bg-label: #1f1f23;
+  --rsp-color-bg-hover: #3f3f46;
+  --rsp-color-text: #e4e4e7;
+  --rsp-color-text-sub: #a1a1aa;
+  --rsp-color-text-header: #d4d4d8;
+  --rsp-color-saturday: #6d9aff;
+  --rsp-color-sunday: #f87171;
+  --rsp-preset-bg: #27272a;
+  --rsp-preset-bg-hover: #3f3f46;
+  --rsp-preset-border: #3f3f46;
+  --rsp-preset-text: #e4e4e7;
+}
