@@ -46,9 +46,9 @@ const format24h = (h: number): string => String(h);
 
 const format12hAmPm = (h: number): string => {
   if (h === 0) return "12AM";
-  if (h < 12) return `${h}AM`;
   if (h === 12) return "12PM";
-  return `${h - 12}PM`;
+  if (h < 12) return String(h);
+  return String(h - 12);
 };
 
 // === Label data ===
@@ -95,12 +95,10 @@ const DAY_LABELS_BY_LOCALE = {
 } as const;
 
 // === LOCALE_PRESETS ===
-// Design §9.1: "en"/"en-US"에도 v1 호환 주말색 유지 (SC4 breaking 방지)
-
-const V1_COMPAT_WEEKEND: Record<string, string> = {
-  sat: "#2d6af6",
-  sun: "#f04646",
-};
+// 문화적 컨벤션 기반 주말 색상:
+// - en, en-US: 서양 캘린더는 주말 색상 구분 없음
+// - ko, ja: 토 파랑, 일 빨강 (전통 컨벤션)
+// - zh-CN, zh-TW: 토일 모두 빨강
 
 export const LOCALE_PRESETS: Record<LocaleKey, LocalePreset> = {
   "en": {
@@ -110,7 +108,7 @@ export const LOCALE_PRESETS: Record<LocaleKey, LocalePreset> = {
       presets: PRESET_LABELS.en,
     },
     weekStartsOn: "mon",
-    weekendHighlight: V1_COMPAT_WEEKEND,
+    weekendHighlight: "none",
     formatHour: format24h,
     dayLabels: DAY_LABELS_BY_LOCALE.en,
   },
@@ -121,13 +119,13 @@ export const LOCALE_PRESETS: Record<LocaleKey, LocalePreset> = {
       presets: PRESET_LABELS.en,
     },
     weekStartsOn: "sun",
-    weekendHighlight: V1_COMPAT_WEEKEND,
+    weekendHighlight: "none",
     formatHour: format12hAmPm,
     dayLabels: DAY_LABELS_BY_LOCALE.en,
   },
   "ko": {
     messages: {
-      clear: "지우기",
+      clear: "초기화",
       noSelection: "선택 없음",
       presets: PRESET_LABELS.ko,
     },

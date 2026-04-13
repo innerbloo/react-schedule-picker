@@ -52,6 +52,7 @@
   border-radius: var(--rsp-border-radius);
   width: 100%;
   overflow: hidden;
+  background-color: var(--rsp-color-bg);
 }
 
 /* 요일 라벨 컬럼 폭 */
@@ -86,6 +87,7 @@
   text-align: center;
   padding: 6px 0;
   cursor: pointer;
+  touch-action: none;
 }
 
 .rsp-header-cell span {
@@ -112,6 +114,7 @@
   background-color: var(--rsp-color-bg-label);
   border-top: 1px solid var(--rsp-color-border);
   cursor: pointer;
+  touch-action: none;
 }
 
 .rsp-day-label:hover {
@@ -129,10 +132,12 @@
   border-left: 1px solid var(--rsp-color-border);
   border-top: 1px solid var(--rsp-color-border);
   cursor: pointer;
+  touch-action: none;
+  -webkit-touch-callout: none;
 }
 
 .rsp-cell:hover {
-  background-color: var(--rsp-color-bg-header);
+  background-color: var(--rsp-color-bg-hover);
 }
 
 .rsp-cell--highlighted {
@@ -242,6 +247,7 @@
   background-color: var(--rsp-color-bg-label);
   border-top: 1px solid var(--rsp-color-border);
   cursor: pointer;
+  touch-action: none;
 }
 
 .rsp-hour-label:hover {
@@ -265,20 +271,20 @@
   transform: none;
 }
 
-/* 모바일 최적화 */
+/* 모바일 최적화 (터치 타겟 권장 크기 ~30px+) */
 @media (max-width: 639px) {
   .rsp-day-label {
-    width: 32px;
+    width: 36px;
     font-size: var(--rsp-font-size-sm);
     padding: 6px 0;
   }
 
   .rsp-day-col {
-    width: 32px;
+    width: 36px;
   }
 
   .rsp-cell {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
   }
 }

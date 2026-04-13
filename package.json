@@ -22,6 +22,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "demo": "vite example",
+    "build:demo": "vite build example",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {

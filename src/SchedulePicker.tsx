@@ -26,7 +26,7 @@ export function SchedulePicker({
   visibleDays: visibleDaysProp,
   dayLabels: dayLabelsProp,
   dayAxis = "x",
-  showAllHours = true,
+  compactHourLabels = false,
   formatHour,
   disabledSlots,
   className,
@@ -75,10 +75,10 @@ export function SchedulePicker({
       // Priority: formatHour prop > locale formatHour > formatHourHeader fallback
       // v1.0.0 호환: locale 미지정 시 effectiveFormatHour=format24h=String(h)로 동일 결과
       if (formatHour) return formatHour(slot);
-      if (showAllHours) return effectiveFormatHour(slot);
-      return formatHourHeader(slot);
+      if (compactHourLabels) return formatHourHeader(slot);
+      return effectiveFormatHour(slot);
     },
-    [formatHour, effectiveFormatHour, showAllHours],
+    [formatHour, effectiveFormatHour, compactHourLabels],
   );
 
   // --- 드래그 핸들러 ---
@@ -93,6 +93,7 @@ export function SchedulePicker({
       baseRef.current = value;
       startRef.current = { dayIdx, slotIdx };
       setIsDragging(true);
+      navigator.vibrate?.(8);
       onChange(toggleHourWithMax(value, day, slot, willSelect, undefined, disabledSlots));
     },
     [value, onChange, visibleDays, slots, readOnly, disabledSlots],
@@ -156,28 +157,6 @@ export function SchedulePicker({
     [visibleDays, slots, disabledSlots],
   );
 
-  // --- 터치 드래그 ---
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isDragging || readOnly) return;
-      e.preventDefault();
-
-      const touch = e.touches[0];
-      const element = document.elementFromPoint(
-        touch.clientX,
-        touch.clientY,
-      ) as HTMLElement | null;
-
-      const day = element?.dataset.day;
-      const hourStr = element?.dataset.hour;
-      if (day && hourStr) {
-        handleCellPointerOver(day, Number(hourStr));
-      }
-    },
-    [isDragging, readOnly, handleCellPointerOver],
-  );
-
   // --- 행/열 토글 ---
 
   const handleDayHeaderDown = useCallback(
@@ -192,6 +171,7 @@ export function SchedulePicker({
       headerStartRef.current = dayIdx;
       headerBaseRef.current = value;
       setIsHeaderDragging("day");
+      navigator.vibrate?.(8);
       onChange(applyDayRange(value, dayIdx, dayIdx, willSelect));
     },
     [value, onChange, slots, visibleDays, readOnly, disabledSlots, applyDayRange],
@@ -216,6 +196,7 @@ export function SchedulePicker({
       headerStartRef.current = slotIdx;
       headerBaseRef.current = value;
       setIsHeaderDragging("hour");
+      navigator.vibrate?.(8);
       onChange(applyHourRange(value, slotIdx, slotIdx, willSelect));
     },
     [value, onChange, slots, visibleDays, readOnly, disabledSlots, applyHourRange],
@@ -228,6 +209,54 @@ export function SchedulePicker({
       onChange(applyHourRange(headerBaseRef.current, headerStartRef.current, slotIdx, headerDragSelectRef.current));
     },
     [isHeaderDragging, readOnly, slots, onChange, applyHourRange],
+  );
+
+  // --- 터치 드래그 (셀 + 헤더) ---
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if ((!isDragging && !isHeaderDragging) || readOnly) return;
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      const element = document.elementFromPoint(
+        touch.clientX,
+        touch.clientY,
+      ) as HTMLElement | null;
+      if (!element) return;
+
+      if (isDragging) {
+        const day = element.dataset.day;
+        const hourStr = element.dataset.hour;
+        if (day && hourStr) {
+          handleCellPointerOver(day, Number(hourStr));
+        }
+        return;
+      }
+
+      if (isHeaderDragging === "day") {
+        const dayHeader = element.dataset.dayHeader;
+        if (dayHeader) {
+          handleDayHeaderOver(dayHeader);
+        }
+        return;
+      }
+
+      if (isHeaderDragging === "hour") {
+        const hourHeader = element.dataset.hourHeader;
+        if (hourHeader) {
+          handleHourHeaderOver(Number(hourHeader));
+        }
+      }
+    },
+    [
+      isDragging,
+      isHeaderDragging,
+      readOnly,
+      handleCellPointerOver,
+      handleDayHeaderOver,
+      handleHourHeaderOver,
+    ],
   );
 
   // --- 전체 토글 ---
@@ -353,10 +382,15 @@ export function SchedulePicker({
                     onClick={handleToggleAll}
                     onMouseEnter={() => setCornerHovered(true)}
                     onMouseLeave={() => setCornerHovered(false)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      handleToggleAll();
+                    }}
                   />
                   {slots.map((s) => (
                     <th
                       key={s}
+                      data-hour-header={s}
                       className={`rsp-header-cell${readOnly ? " rsp-header-cell--readonly" : ""}`}
                       onMouseDown={(e) => {
                         e.preventDefault();
@@ -367,6 +401,10 @@ export function SchedulePicker({
                         handleHourHeaderOver(s);
                       }}
                       onMouseEnter={() => setHoveredHour(s)}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        handleHourHeaderDown(s);
+                      }}
                     >
                       <span>{getHourLabel(s)}</span>
                     </th>
@@ -377,6 +415,7 @@ export function SchedulePicker({
                 {visibleDays.map((day) => (
                   <tr key={day} className="rsp-day-row">
                     <td
+                      data-day-header={day}
                       className={getDayLabelClass(day)}
                       style={getDayLabelStyle(day)}
                       onMouseDown={(e) => {
@@ -389,6 +428,10 @@ export function SchedulePicker({
                       }}
                       onMouseEnter={() => setHoveredDay(day)}
                       onMouseLeave={() => setHoveredDay(null)}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        handleDayHeaderDown(day);
+                      }}
                     >
                       {dayLabels[day] ?? day}
                     </td>
@@ -430,10 +473,15 @@ export function SchedulePicker({
                     onClick={handleToggleAll}
                     onMouseEnter={() => setCornerHovered(true)}
                     onMouseLeave={() => setCornerHovered(false)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      handleToggleAll();
+                    }}
                   />
                   {visibleDays.map((day) => (
                     <th
                       key={day}
+                      data-day-header={day}
                       className={`rsp-header-cell rsp-header-cell--day${readOnly ? " rsp-header-cell--readonly" : ""}`}
                       style={getDayLabelStyle(day)}
                       onMouseDown={(e) => {
@@ -445,6 +493,10 @@ export function SchedulePicker({
                         handleDayHeaderOver(day);
                       }}
                       onMouseEnter={() => setHoveredDay(day)}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        handleDayHeaderDown(day);
+                      }}
                     >
                       <span>{dayLabels[day] ?? day}</span>
                     </th>
@@ -455,6 +507,7 @@ export function SchedulePicker({
                 {slots.map((slot) => (
                   <tr key={slot} className="rsp-day-row">
                     <td
+                      data-hour-header={slot}
                       className={`rsp-hour-label${readOnly ? " rsp-hour-label--readonly" : ""}`}
                       onMouseDown={(e) => {
                         e.preventDefault();
@@ -466,6 +519,10 @@ export function SchedulePicker({
                       }}
                       onMouseEnter={() => setHoveredHour(slot)}
                       onMouseLeave={() => setHoveredHour(null)}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        handleHourHeaderDown(slot);
+                      }}
                     >
                       {getHourLabel(slot)}
                     </td>

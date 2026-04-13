@@ -39,9 +39,9 @@ export interface SchedulePickerProps {
   dayLabels?: Record<string, string>;
   /** 요일 축 방향: "x"면 요일이 열, "y"면 요일이 행 (기본: "x") */
   dayAxis?: "x" | "y";
-  /** 모든 시간 라벨 표시 여부 (기본: true) */
-  showAllHours?: boolean;
-  /** 시간 라벨 포맷 함수. showAllHours보다 우선 적용 */
+  /** 시간 라벨을 압축해서 표시. true면 3의 배수만 숫자, 나머지는 · (기본: false) */
+  compactHourLabels?: boolean;
+  /** 시간 라벨 포맷 함수. compactHourLabels보다 우선 적용 */
   formatHour?: (hour: number) => string;
   /** 선택 불가 슬롯. Schedule과 동일한 형태 */
   disabledSlots?: Schedule;
