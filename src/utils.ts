@@ -165,6 +165,7 @@ export function summarizeSchedule(
   },
   visibleDays: readonly string[] = DAY_ORDER,
   hourlyChunks: number = 1,
+  noSelectionLabel: string = "No selection",
 ): string {
   const step = 1 / hourlyChunks;
   const entries = visibleDays
@@ -186,7 +187,7 @@ export function summarizeSchedule(
       }
       return `${dayLabels[day] ?? day}: ${ranges.join(", ")}`;
     });
-  return entries.length > 0 ? entries.join(" | ") : "No selection";
+  return entries.length > 0 ? entries.join(" | ") : noSelectionLabel;
 }
 
 /** 빈 Schedule 생성 */

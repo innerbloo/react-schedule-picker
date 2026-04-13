@@ -8,7 +8,7 @@
   --rsp-color-bg: #ffffff;
   --rsp-color-bg-header: #f4f4f5;
   --rsp-color-bg-label: #fafafa;
-  --rsp-color-bg-hover: #f4f4f5;
+  --rsp-color-bg-hover: #efeff1;
   --rsp-color-text: #2c2c31;
   --rsp-color-text-sub: #71717a;
   --rsp-color-text-header: #1c1c20;
@@ -35,22 +35,31 @@
 
 /* 다크 모드 */
 .rsp-dark {
-  --rsp-color-primary: #6d9aff;
-  --rsp-color-primary-light: #1e2a4a;
-  --rsp-color-selected: #3b5998;
-  --rsp-color-selected-readonly: #4a4a4e;
-  --rsp-color-border: #3f3f46;
+  /* 포인트 컬러: 밝은 인디고로 대비 강화 */
+  --rsp-color-primary: #818cf8;
+  --rsp-color-primary-light: #312e81;
+  --rsp-color-selected: #6366f1;
+  --rsp-color-selected-readonly: #52525b;
+
+  /* 베이스: 살짝 푸른 톤의 zinc (순검정보다 덜 칙칙함) */
+  --rsp-color-border: #2e2e35;
   --rsp-color-bg: #18181b;
-  --rsp-color-bg-header: #27272a;
-  --rsp-color-bg-label: #1f1f23;
-  --rsp-color-bg-hover: #3f3f46;
-  --rsp-color-text: #e4e4e7;
+  --rsp-color-bg-header: #232328;
+  --rsp-color-bg-label: #1e1e22;
+  --rsp-color-bg-hover: #282830;
+
+  /* 텍스트 */
+  --rsp-color-text: #f4f4f5;
   --rsp-color-text-sub: #a1a1aa;
-  --rsp-color-text-header: #d4d4d8;
-  --rsp-color-saturday: #6d9aff;
-  --rsp-color-sunday: #f87171;
+  --rsp-color-text-header: #e4e4e7;
+
+  /* 요일 강조색 */
+  --rsp-color-saturday: #7dd3fc;
+  --rsp-color-sunday: #fda4af;
+
+  /* 프리셋 버튼 */
   --rsp-preset-bg: #27272a;
   --rsp-preset-bg-hover: #3f3f46;
   --rsp-preset-border: #3f3f46;
-  --rsp-preset-text: #e4e4e7;
+  --rsp-preset-text: #f4f4f5;
 }

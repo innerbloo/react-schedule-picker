@@ -118,13 +118,8 @@
   background-color: var(--rsp-color-bg-hover);
 }
 
-.rsp-day-label--sat {
-  color: var(--rsp-color-saturday);
-}
-
-.rsp-day-label--sun {
-  color: var(--rsp-color-sunday);
-}
+/* 주말 강조 색상은 컴포넌트가 weekendHighlight prop/locale 기반 인라인 style로 주입합니다.
+   .rsp-day-label--sat, .rsp-day-label--sun 클래스명은 사용자 커스텀 CSS 오버라이드를 위해 유지합니다. */
 
 /* 시간 셀 */
 .rsp-cell {
@@ -150,6 +145,7 @@
 
 .rsp-cell--selected:hover {
   background-color: var(--rsp-color-selected);
+  filter: brightness(1.1);
 }
 
 /* disabledSlots: 빗금 패턴 */

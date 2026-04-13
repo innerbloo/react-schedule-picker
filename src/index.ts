@@ -22,3 +22,25 @@ export {
   slotToTimeString,
   isSlotDisabled,
 } from "./utils";
+
+// 직렬화 유틸리티
+export { toRanges, fromRanges, toISO } from "./serialize";
+export type {
+  TimeRange,
+  RangesPayload,
+  ToRangesOptions,
+  ToISOOptions,
+  IsoDayOfWeek,
+} from "./serialize";
+
+// 로케일 (v1.1)
+export { LOCALE_PRESETS, resolveLocaleConfig, rotateDays, getDefaultPresets } from "./locales";
+export type {
+  LocaleKey,
+  Messages,
+  LocalePreset,
+  WeekStartsOn,
+  WeekendHighlight,
+  ResolvedLocaleConfig,
+  ResolveLocaleInput,
+} from "./locales";

@@ -1,3 +1,6 @@
+// Design Ref: §2 Type Design — locale-support
+import type { LocaleKey, Messages, WeekStartsOn, WeekendHighlight } from "./locales";
+
 /** 주간 스케줄 데이터: 요일 키 → 슬롯 배열 */
 export type Schedule = Record<string, number[]>;
 
@@ -45,4 +48,16 @@ export interface SchedulePickerProps {
 
   /** 최외곽 className 추가 */
   className?: string;
+
+  // === Localization (v1.1) ===
+  // Design Ref: §2.2 — locale props (모두 optional, 기존 사용자 영향 없음)
+
+  /** 로케일 프리셋 키. 기본값 "en" */
+  locale?: LocaleKey;
+  /** locale 프리셋 위에 개별 메시지 덮어쓰기 */
+  messages?: Partial<Messages>;
+  /** 주 시작일. locale 기본값 대신 강제 지정 */
+  weekStartsOn?: WeekStartsOn;
+  /** 요일별 강조 색상 (CSS color). "none"이면 강조 없음 */
+  weekendHighlight?: WeekendHighlight;
 }

@@ -1,10 +1,6 @@
+// Design Ref: §4 Component Integration — locale-support
 import { useCallback, useRef, useState, useMemo } from "react";
 import type { SchedulePickerProps } from "./types";
-import {
-  DAY_ORDER,
-  DAY_LABELS as DEFAULT_DAY_LABELS,
-  DEFAULT_PRESETS,
-} from "./constants";
 import {
   hasHour,
   toggleHourWithMax,
@@ -13,6 +9,7 @@ import {
   generateSlots,
   isSlotDisabled,
 } from "./utils";
+import { resolveLocaleConfig, rotateDays, getDefaultPresets } from "./locales";
 import type { Schedule, Preset } from "./types";
 import "./SchedulePicker.css";
 
@@ -20,24 +17,47 @@ export function SchedulePicker({
   value,
   onChange,
   onSelectEnd,
-  presets,
+  presets: presetsProp,
   hideToolbar = false,
   readOnly = false,
   disabled = false,
   minHour = 0,
   maxHour = 23,
-  visibleDays = DAY_ORDER as unknown as string[],
-  dayLabels = DEFAULT_DAY_LABELS,
+  visibleDays: visibleDaysProp,
+  dayLabels: dayLabelsProp,
   dayAxis = "x",
   showAllHours = true,
   formatHour,
   disabledSlots,
   className,
+  // Localization props
+  locale,
+  messages,
+  weekStartsOn,
+  weekendHighlight,
 }: SchedulePickerProps) {
+  // Design §4.1: locale 해석 (props > preset > fallback)
+  const resolvedLocale = useMemo(
+    () => resolveLocaleConfig({ locale, messages, weekStartsOn, weekendHighlight }),
+    [locale, messages, weekStartsOn, weekendHighlight],
+  );
+
+  // Design §4.1: 기존 props가 있으면 최우선, 없으면 locale 기본값
+  const dayLabels = dayLabelsProp ?? resolvedLocale.dayLabels;
+  const effectiveFormatHour = formatHour ?? resolvedLocale.formatHour;
+  const visibleDays = useMemo(
+    () => visibleDaysProp ?? rotateDays(resolvedLocale.weekStartsOn),
+    [visibleDaysProp, resolvedLocale.weekStartsOn],
+  );
+  const activePresets = useMemo(
+    () => presetsProp ?? getDefaultPresets(resolvedLocale.messages),
+    [presetsProp, resolvedLocale.messages],
+  );
   const [isDragging, setIsDragging] = useState(false);
   const [isHeaderDragging, setIsHeaderDragging] = useState<"day" | "hour" | false>(false);
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
   const [hoveredHour, setHoveredHour] = useState<number | null>(null);
+  const [cornerHovered, setCornerHovered] = useState(false);
   const dragSelectRef = useRef(true);
   const headerDragSelectRef = useRef(true);
   const headerStartRef = useRef<number>(0);
@@ -50,15 +70,15 @@ export function SchedulePicker({
     () => generateSlots(minHour, maxHour, 1),
     [minHour, maxHour],
   );
-  const activePresets = presets ?? DEFAULT_PRESETS;
-
   const getHourLabel = useCallback(
     (slot: number): string => {
+      // Priority: formatHour prop > locale formatHour > formatHourHeader fallback
+      // v1.0.0 호환: locale 미지정 시 effectiveFormatHour=format24h=String(h)로 동일 결과
       if (formatHour) return formatHour(slot);
-      if (showAllHours) return String(slot);
+      if (showAllHours) return effectiveFormatHour(slot);
       return formatHourHeader(slot);
     },
-    [formatHour, showAllHours],
+    [formatHour, effectiveFormatHour, showAllHours],
   );
 
   // --- 드래그 핸들러 ---
@@ -248,10 +268,19 @@ export function SchedulePicker({
 
   const getDayLabelClass = (day: string) => {
     const classes = ["rsp-day-label"];
-    if (day === "sat") classes.push("rsp-day-label--sat");
-    if (day === "sun") classes.push("rsp-day-label--sun");
+    // weekendHighlight에 색상이 지정된 요일에는 모두 `rsp-day-label--{day}` 클래스 부여
+    // (사용자가 CSS로 추가 스타일링 가능하도록)
+    if (resolvedLocale.weekendHighlight[day]) {
+      classes.push(`rsp-day-label--${day}`);
+    }
     if (readOnly) classes.push("rsp-day-label--readonly");
     return classes.join(" ");
+  };
+
+  // Design §4.2: 주말 강조 인라인 style (locale/props 기반)
+  const getDayLabelStyle = (day: string): React.CSSProperties | undefined => {
+    const color = resolvedLocale.weekendHighlight[day];
+    return color ? { color } : undefined;
   };
 
   // --- 셀 클래스 ---
@@ -259,7 +288,7 @@ export function SchedulePicker({
   const getCellClass = (day: string, slot: number) => {
     const selected = hasHour(value, day, slot);
     const slotDisabled = isSlotDisabled(disabledSlots, day, slot);
-    const highlighted = hoveredDay === day || hoveredHour === slot;
+    const highlighted = cornerHovered || hoveredDay === day || hoveredHour === slot;
     return [
       "rsp-cell",
       selected && "rsp-cell--selected",
@@ -298,7 +327,7 @@ export function SchedulePicker({
             onClick={() => onChange({})}
             disabled={readOnly}
           >
-            Clear
+            {resolvedLocale.messages.clear}
           </button>
         </div>
       )}
@@ -319,7 +348,12 @@ export function SchedulePicker({
               </colgroup>
               <thead>
                 <tr className="rsp-header-row" onMouseLeave={() => setHoveredHour(null)}>
-                  <th className={`rsp-corner-cell${readOnly ? "" : " rsp-corner-cell--clickable"}`} onClick={handleToggleAll} />
+                  <th
+                    className={`rsp-corner-cell${readOnly ? "" : " rsp-corner-cell--clickable"}`}
+                    onClick={handleToggleAll}
+                    onMouseEnter={() => setCornerHovered(true)}
+                    onMouseLeave={() => setCornerHovered(false)}
+                  />
                   {slots.map((s) => (
                     <th
                       key={s}
@@ -344,6 +378,7 @@ export function SchedulePicker({
                   <tr key={day} className="rsp-day-row">
                     <td
                       className={getDayLabelClass(day)}
+                      style={getDayLabelStyle(day)}
                       onMouseDown={(e) => {
                         e.preventDefault();
                         handleDayHeaderDown(day);
@@ -390,11 +425,17 @@ export function SchedulePicker({
               </colgroup>
               <thead>
                 <tr className="rsp-header-row" onMouseLeave={() => setHoveredDay(null)}>
-                  <th className={`rsp-corner-cell${readOnly ? "" : " rsp-corner-cell--clickable"}`} onClick={handleToggleAll} />
+                  <th
+                    className={`rsp-corner-cell${readOnly ? "" : " rsp-corner-cell--clickable"}`}
+                    onClick={handleToggleAll}
+                    onMouseEnter={() => setCornerHovered(true)}
+                    onMouseLeave={() => setCornerHovered(false)}
+                  />
                   {visibleDays.map((day) => (
                     <th
                       key={day}
                       className={`rsp-header-cell rsp-header-cell--day${readOnly ? " rsp-header-cell--readonly" : ""}`}
+                      style={getDayLabelStyle(day)}
                       onMouseDown={(e) => {
                         e.preventDefault();
                         handleDayHeaderDown(day);

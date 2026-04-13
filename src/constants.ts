@@ -22,7 +22,11 @@ const WEEKENDS = ["sat", "sun"];
 const DAY_HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 const NIGHT_HOURS = [18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5];
 
-/** 내장 프리셋 4종 */
+/**
+ * 내장 프리셋 4종 (영어 라벨 고정).
+ * @deprecated v1.1+ — 로케일 기반 번역된 프리셋을 얻으려면 `getDefaultPresets(messages)`
+ * 또는 `<SchedulePicker locale="..." />`를 사용하세요. 이 상수는 하위호환 목적으로만 유지됩니다.
+ */
 export const DEFAULT_PRESETS: Preset[] = [
   { label: "Weekday Day", days: WEEKDAYS, hours: DAY_HOURS },
   { label: "Weekday Night", days: WEEKDAYS, hours: NIGHT_HOURS },
