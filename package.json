@@ -1,20 +1,22 @@
 {
   "name": "react-schedule-picker",
   "version": "1.0.0",
-  "description": "A responsive weekly schedule picker component for React. Drag-to-select time slots on a 7×24 grid.",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "description": "Drag-to-select weekly schedule picker for React. Zero dependencies, fully typed, locale-aware.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     },
     "./styles.css": "./dist/index.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": [
     "*.css"
@@ -24,7 +26,8 @@
     "dev": "tsup --watch",
     "demo": "vite example",
     "build:demo": "vite build example",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -52,10 +55,14 @@
     "calendar",
     "timetable"
   ],
-  "author": "",
+  "author": "innerbloo",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
-  }
+    "url": "git+https://github.com/innerbloo/react-schedule-picker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/innerbloo/react-schedule-picker/issues"
+  },
+  "homepage": "https://react-schedule-picker.vercel.app/"
 }
