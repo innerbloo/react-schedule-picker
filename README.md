@@ -7,6 +7,8 @@
 
 Drag-to-select weekly schedule picker for React. Zero dependencies, fully typed, locale-aware.
 
+**[Live Demo →](https://react-schedule-picker.vercel.app/)**
+
 ```tsx
 <SchedulePicker value={schedule} onChange={setSchedule} />
 ```
