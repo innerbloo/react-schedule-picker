@@ -2,3 +2,5 @@ node_modules/
 dist/
 .bkit/
 .idea/
+RESEARCH.md
+docs/
